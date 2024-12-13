@@ -1,0 +1,115 @@
+{
+  "builder_name": "code_search_net",
+  "citation": "@article{husain2019codesearchnet,\n    title={{CodeSearchNet} challenge: Evaluating the state of semantic code search},\n    author={Husain, Hamel and Wu, Ho-Hsiang and Gazit, Tiferet and Allamanis, Miltiadis and Brockschmidt, Marc},\n    journal={arXiv preprint arXiv:1909.09436},\n    year={2019}\n}\n",
+  "config_name": "python",
+  "dataset_name": "code_search_net",
+  "dataset_size": 1736139664,
+  "description": "CodeSearchNet corpus contains about 6 million functions from open-source code spanning six programming languages (Go, Java, JavaScript, PHP, Python, and Ruby). The CodeSearchNet Corpus also contains automatically generated query-like natural language for 2 million functions, obtained from mechanically scraping and preprocessing associated function documentation.\n",
+  "download_checksums": {
+    "data/python.zip": {
+      "num_bytes": 940909997,
+      "checksum": null
+    }
+  },
+  "download_size": 940909997,
+  "features": {
+    "repository_name": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_path_in_repository": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_name": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "whole_func_string": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "language": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_code_string": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_code_tokens": {
+      "feature": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "func_documentation_string": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_documentation_tokens": {
+      "feature": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "split_name": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "func_code_url": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "extracted_func_name": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "extracted_body_clean": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "extracted_body_full": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "https://github.com/github/CodeSearchNet",
+  "license": "Various",
+  "size_in_bytes": 2677049661,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 1559643126,
+      "num_examples": 412178,
+      "shard_lengths": [
+        129000,
+        139000,
+        130000,
+        14178
+      ],
+      "dataset_name": "code_search_net"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 84341908,
+      "num_examples": 22176,
+      "dataset_name": "code_search_net"
+    },
+    "validation": {
+      "name": "validation",
+      "num_bytes": 92154630,
+      "num_examples": 23107,
+      "dataset_name": "code_search_net"
+    }
+  },
+  "version": {
+    "version_str": "1.0.0",
+    "description": "Add CodeSearchNet corpus dataset",
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  }
+}

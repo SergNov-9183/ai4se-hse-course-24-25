@@ -1,0 +1,170 @@
+Генерация имени функции по ее телу - Python
+
+1. Изменения в коде data.py
+
+- загрузка датасета code-search-net:
+def load_codesearch():
+    dataset = datasets.load_dataset('code-search-net/code_search_net', name='python', trust_remote_code=True, split='test[:1000]')
+    return dataset
+
+- получить имя, тело и тело без комментариев в виде словаря для добавления к записи датасета
+def add_extracted_fields(example):
+	wfs = example['whole_func_string']
+	func_name, body_clean, body_full = parse_function(wfs)
+	return {
+		**example,
+		'extracted_func_name': func_name,
+		'extracted_body_clean': body_clean,
+		'extracted_body_full': body_full
+	}
+
+- извлечь из whole_func_string название, тело, тело без документации и комментариев
+  
+  parse_function(whole_func_string)
+  выполняется с использованиеем tree_sitter_python
+
+- очистить тело функции от комментариев и документации
+  
+  clear_func_body(body) 
+
+- вывести содержимое датасета (сравнивая имена функций и документацию с оригинальными)
+
+  demo_dataset(dataset)
+  
+- prepare() - добавление новых полей функций в оригинальный датасет:
+  
+  dataset = load_codesearch()
+  dataset = dataset.map(add_extracted_fields)
+
+2. Изменения в коде models.py
+
+- опциональные параметры в predict
+
+  def predict(dataset: datasets.Dataset, model_name: str,
+            time_it=False, comments_include=False, show_precidts=False) -> None:
+
+  time_it - засекать ли время, в течение которого выполняются предсказания
+  comments_include - предсказание по телу с документацией или без
+  show_predicts - показать ли 10 случайных примеров пар <Предсказанное название, Настоящее название>
+  eval_worst - размер выборки для худших случаев при оценивании (0 - не выбирать)
+  
+  получем тела функций для разбора - либо чистые, либо с документацией
+  if comments_include:
+	function_bodies = [f"{example['extracted_body_full']}" for example in dataset]
+  else:
+	function_bodies = [f"{example['extracted_body_clean']}" for example in dataset]
+  
+  для модели Salesforce/codet5p-220m добавим токен <extra_id_0> для предсказываемого имени
+  if model_name == 'Salesforce/codet5p-220m':
+	input_text = 'def <extra_id_0>(): ' + body
+  
+3. Результаты
+
+python main.py predict-names -d ./prepared-dataset -m Salesforce/codet5p-220m
+
+Без комментариев, без вывода худших
+
+Evaluation results:
+{'exact_match': np.float64(0.149),
+ 'rouge1': np.float64(0.38262221595301575),
+ 'rouge2': np.float64(0.19385122857142857),
+ 'rougeL': np.float64(0.3810274444444443),
+ 'rougeLsum': np.float64(0.3811254908522112)}
+********************************************************************************
+```
+
+С комментариями, замером времени, с выборкой худших:
+
+Predictions completed in 59 min 59 s
+
+Examples of predictions:
+commit predicted as commit
+_write_local_data_files predicted as write_results
+_upload_to_gcs predicted as upload_files_to_upload
+get_dag predicted as get_dag_from_dag_id
+_create_scale_operator predicted as _make_scale
+dagbag_report predicted as print_report
+get_product predicted as get_product_id
+check_for_bucket predicted as check_bucket_exists
+visualize_decision predicted as visualize_decision_boundary
+catch_http_exception predicted as decorator_for_http_error
+
+********************************************************************************
+
+Evaluation results (including comments: True):
+{'exact_match': np.float64(0.212),
+ 'rouge1': np.float64(0.487569660894661),
+ 'rouge2': np.float64(0.28387341269841265),
+ 'rougeL': np.float64(0.48667020202020206),
+ 'rougeLsum': np.float64(0.4860434343434343)}
+********************************************************************************
+
+
+********************************************************************************
+
+The worst predictions:
+
+Prediction: 'extract_video_id'
+Reference: 'get_vid_from_url'
+ROUGE-1: 0.0
+"""Extracts video ID from URL.
+        """
+        return match1(url, r'youtu\.be/([^?/]+)') or \
+          match1(url, r'youtube\.com/embed/([^/?]+)') or \
+          match1(url, r'youtube\.com/v/([^/?]+)') or \
+          match1(url, r'youtube\.com/watch/([^/?]+)') or \
+          parse_query_param(url, 'v') or \
+          parse_query_param(parse_query_param(url, 'u'), 'v')
+
+Prediction: 'md5'
+Reference: 'makeMimi'
+ROUGE-1: 0.0
+"""From http://cdn37.atwikiimg.com/sitescript/pub/dksitescript/FC2.site.js
+    Also com.hps.util.fc2.FC2EncrptUtil.makeMimiLocal
+    L110"""
+    strSeed = "gGddgPfeaf_gzyr"
+    prehash = upid + "_" + strSeed
+    return md5(prehash.encode('utf-8')).hexdigest()
+
+Prediction: 'format_text'
+Reference: 'sprint'
+ROUGE-1: 0.0
+"""Format text with color or other effects into ANSI escaped string."""
+    return "\33[{}m{content}\33[{}m".format(";".join([str(color) for color in colors]), RESET, content=text) if IS_ANSI_TERMINAL and colors else text
+
+Prediction: 'print_error'
+Reference: 'e'
+ROUGE-1: 0.0
+"""Print an error log message."""
+    print_log(message, YELLOW, BOLD)
+    if exit_code is not None:
+        sys.exit(exit_code)
+
+Prediction: 'terrible_failure'
+Reference: 'wtf'
+ROUGE-1: 0.0
+"""What a Terrible Failure!"""
+    print_log(message, RED, BOLD)
+    if exit_code is not None:
+        sys.exit(exit_code)
+
+********************************************************************************
+
+4. Выводы
+
+Была реализована загрузка датасета с набором python-функцй с CodeSearchNet
+Датасет был сохранен на диск для дальшейшего использования без предварительной загрузки
+
+Был реализован процесс предсказания имен функций по их телу
+Используемая модель: CodeT5+
+
+Были получены оценки результатов предсказаний
+Метрики качества: Exact Match, ROUGE-scor
+
+Полученные результаты соответствуют заявленным как ожидаемые из задания
+Предсказания без документации: EM в окрестности 0.145, ROUGE-1 в окрестности 0.38
+Предсказания с документацией: EM в окрестности 0.209, ROUGE-1 в окрестности 0.49
+
+Худшие случаи имеют оценку 0.0
+
+Полученные результаты говорят о том, что программы выполняется корректно 
